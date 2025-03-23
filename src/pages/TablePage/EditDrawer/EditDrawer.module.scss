@@ -1,0 +1,16 @@
+.drawer {
+  display: flex;
+  flex-direction: column;
+  width: 400px;
+  height: 100%;
+  background-color: #fff;
+  padding: 16px;
+  gap: 16px;
+
+  &__footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 16px;
+    margin-top: auto;
+  }
+}

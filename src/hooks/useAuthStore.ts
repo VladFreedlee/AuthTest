@@ -76,6 +76,11 @@ export const useAuthStore = () => {
     [isLoading, dispatch, setIsLoading, setError, setToken, navigate]
   );
 
+  const logout = React.useCallback(() => {
+    setToken(null);
+    navigate(routerUrls.auth.create());
+  }, [setToken, navigate]);
+
   return {
     user,
     isAuth,
@@ -83,6 +88,7 @@ export const useAuthStore = () => {
     error,
     isError,
     login,
+    logout,
     setToken,
     setIsLoadingState,
   };

@@ -5,12 +5,18 @@ export interface TableDataState {
   tableData: TableDataRowResponse[];
   isLoading: boolean;
   error: string | null;
+  isOpenDeleteModal: boolean;
+  isOpenEditDrawer: boolean;
+  selectedRow: TableDataRowResponse | null;
 }
 
 const initialState: TableDataState = {
   tableData: [],
   isLoading: false,
   error: null,
+  isOpenDeleteModal: false,
+  isOpenEditDrawer: false,
+  selectedRow: null,
 };
 
 export const tableDataSlice = createSlice({
@@ -25,6 +31,15 @@ export const tableDataSlice = createSlice({
     },
     setError: (state, action) => {
       state.error = action.payload;
+    },
+    setIsOpenDeleteModal: (state, action) => {
+      state.isOpenDeleteModal = action.payload;
+    },
+    setIsOpenEditDrawer: (state, action) => {
+      state.isOpenEditDrawer = action.payload;
+    },
+    setSelectedRow: (state, action) => {
+      state.selectedRow = action.payload;
     },
   },
 });

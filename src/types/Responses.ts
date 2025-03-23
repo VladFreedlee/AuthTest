@@ -1,4 +1,5 @@
 export type TableDataRowResponse = {
+  id: string;
   //строка содержащая дату и время в ISO формате
   companySigDate: string;
   //произвольная строка
