@@ -1,4 +1,3 @@
-import * as React from "react";
 import { createBrowserRouter, Navigate } from "react-router-dom";
 
 import { routerUrls } from "./routerUrls";
@@ -12,21 +11,14 @@ const Table = withAuth({
   Component: TablePage,
 });
 
-/* Страницы доступные только неавторизованным пользователям */
-const Login = withAuth({
-  Component: AuthPage,
-  forAuthorizedUser: false,
-});
-
 const router = createBrowserRouter([
   {
     path: "/",
     element: <App />,
-    // errorElement: <ErrorBoundary />,
     children: [
       {
         index: true,
-        element: <Login />,
+        element: <AuthPage />,
       },
       {
         path: routerUrls.table.mask,

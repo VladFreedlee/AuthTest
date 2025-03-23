@@ -1,13 +1,15 @@
 export const API_URL = "https://test.v5.pryaniky.com";
 
+const getRoute = (route: string) => `${API_URL}${route}`;
+
 export const API_ROUTES = {
-  auth: "/ru/data/v3/testmethods/docs/login",
+  auth: getRoute("/ru/data/v3/testmethods/docs/login"),
   table: {
-    get: "/ru/data/v3/testmethods/docs/userdocs/get",
+    get: getRoute("/ru/data/v3/testmethods/docs/userdocs/get"),
     update: (id: number | string) =>
-      `/ru/data/v3/testmethods/docs/userdocs/set/${id}`,
-    create: "/ru/data/v3/testmethods/docs/userdocs/create",
+      getRoute(`/ru/data/v3/testmethods/docs/userdocs/set/${id}`),
+    create: getRoute("/ru/data/v3/testmethods/docs/userdocs/create"),
     delete: (id: number | string) =>
-      `/ru/data/v3/testmethods/docs/userdocs/delete/${id}`,
+      getRoute(`/ru/data/v3/testmethods/docs/userdocs/delete/${id}`),
   },
 };

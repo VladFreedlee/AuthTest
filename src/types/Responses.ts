@@ -19,7 +19,8 @@ export type TableDataRowResponse = {
 
 export type TableDataResponse = {
   data: TableDataRowResponse[];
-  total: number;
+  error_code: number;
+  error_text: string;
 };
 
 export type AuthPayload = {
