@@ -1,55 +1,127 @@
-import { Button, TextField } from "@mui/material";
+import { Button, TextField, Box, Typography } from "@mui/material";
 import * as React from "react";
-
-import styles from "./AuthPage.module.scss";
 import { useAuthStore } from "../../hooks/useAuthStore";
 
+import styles from "./AuthPage.module.scss";
+
+type FormData = {
+  username: string;
+  password: string;
+};
+
+type FormErrors = {
+  username?: string;
+  password?: string;
+};
+
+const initialFormData: FormData = {
+  username: "",
+  password: "",
+};
+
 const AuthPage: React.FC = () => {
-  const { login, error } = useAuthStore();
+  const { login, error: apiError, isLoading } = useAuthStore();
+  const [formData, setFormData] = React.useState<FormData>(initialFormData);
+  const [errors, setErrors] = React.useState<FormErrors>({});
+  const [touched, setTouched] = React.useState<Record<keyof FormData, boolean>>(
+    {
+      username: false,
+      password: false,
+    }
+  );
 
-  const [userName, setUserName] = React.useState("");
-  const [password, setPassword] = React.useState("");
-
-  const handleChangeUserName = React.useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setUserName(e.target.value);
+  const validateField = React.useCallback(
+    (field: keyof FormData, value: string): string => {
+      switch (field) {
+        case "username": {
+          if (!value.trim()) {
+            return "Username is required";
+          }
+          return "";
+        }
+        case "password": {
+          if (!value) {
+            return "Password is required";
+          }
+          return "";
+        }
+        default:
+          return "";
+      }
     },
     []
   );
 
-  const handleChangePassword = React.useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setPassword(e.target.value);
+  const handleChange = React.useCallback(
+    (field: keyof FormData) => (e: React.ChangeEvent<HTMLInputElement>) => {
+      const value = e.target.value;
+      setFormData((prev) => ({ ...prev, [field]: value }));
+
+      if (touched[field]) {
+        const error = validateField(field, value);
+        setErrors((prev) => ({ ...prev, [field]: error }));
+      }
     },
-    []
+    [touched, validateField]
   );
 
-  const handleLogin = React.useCallback(() => {
-    login(userName, password);
-  }, [userName, login, password]);
+  const handleBlur = React.useCallback(
+    (field: keyof FormData) => () => {
+      setTouched((prev) => ({ ...prev, [field]: true }));
+      const error = validateField(field, formData[field]);
+      setErrors((prev) => ({ ...prev, [field]: error }));
+    },
+    [formData, validateField]
+  );
+
+  const handleSubmit = React.useCallback(
+    (e: React.FormEvent) => {
+      e.preventDefault();
+      login(formData.username, formData.password);
+    },
+    [formData, login]
+  );
+
+  const isFormValid = React.useMemo(() => {
+    return formData.username.trim() !== "" && formData.password.length !== 0;
+  }, [formData]);
 
   return (
-    <div className={styles.auth}>
+    <Box component="form" onSubmit={handleSubmit} className={styles.auth}>
+      <Typography variant="h4" component="h1" gutterBottom>
+        Login
+      </Typography>
       <TextField
         label="Username"
         variant="standard"
-        value={userName}
-        onChange={handleChangeUserName}
-        error={!!error}
-        helperText={error}
+        value={formData.username}
+        onChange={handleChange("username")}
+        onBlur={handleBlur("username")}
+        error={!!errors.username || !!apiError}
+        helperText={errors.username || apiError}
+        disabled={isLoading}
+        required
       />
       <TextField
         label="Password"
+        type="password"
         variant="standard"
-        value={password}
-        onChange={handleChangePassword}
-        error={!!error}
-        helperText={error}
+        value={formData.password}
+        onChange={handleChange("password")}
+        onBlur={handleBlur("password")}
+        error={!!errors.password}
+        helperText={errors.password}
+        disabled={isLoading}
+        required
       />
-      <Button variant="contained" onClick={handleLogin}>
-        Login
+      <Button
+        variant="contained"
+        onClick={handleSubmit}
+        disabled={!isFormValid || isLoading}
+      >
+        {isLoading ? "Logging in..." : "Login"}
       </Button>
-    </div>
+    </Box>
   );
 };
 

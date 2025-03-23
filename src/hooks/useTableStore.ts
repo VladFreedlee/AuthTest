@@ -9,6 +9,8 @@ export const useTableStore = () => {
   const {
     tableData,
     isLoading,
+    isEditLoading,
+    isDeleteLoading,
     error,
     isOpenDeleteModal,
     isOpenEditDrawer,
@@ -18,6 +20,8 @@ export const useTableStore = () => {
   const {
     setTableData,
     setIsLoading,
+    setIsEditLoading,
+    setIsDeleteLoading,
     setError,
     setIsOpenDeleteModal,
     setIsOpenEditDrawer,
@@ -88,11 +92,11 @@ export const useTableStore = () => {
 
   const deleteTableData = React.useCallback(
     async (token: string) => {
-      if (isLoading || !selectedRow) {
+      if (isDeleteLoading || !selectedRow) {
         return;
       }
 
-      dispatch(setIsLoading(true));
+      dispatch(setIsDeleteLoading(true));
 
       await axios
         .delete(API_ROUTES.table.delete(selectedRow.id), {
@@ -109,21 +113,29 @@ export const useTableStore = () => {
           dispatch(setError(error.message));
         })
         .finally(() => {
-          dispatch(setIsLoading(false));
-
+          dispatch(setIsDeleteLoading(false));
+          handleCloseDeleteModal();
           fetchTableData(token);
         });
     },
-    [dispatch, fetchTableData, isLoading, selectedRow, setError, setIsLoading]
+    [
+      dispatch,
+      fetchTableData,
+      handleCloseDeleteModal,
+      isDeleteLoading,
+      selectedRow,
+      setError,
+      setIsDeleteLoading,
+    ]
   );
 
   const createTableData = React.useCallback(
     async (token: string, data: Partial<TableDataRowResponse>) => {
-      if (isLoading) {
+      if (isEditLoading) {
         return;
       }
 
-      dispatch(setIsLoading(true));
+      dispatch(setIsEditLoading(true));
 
       await axios
         .post(API_ROUTES.table.create, data, {
@@ -140,24 +152,28 @@ export const useTableStore = () => {
           dispatch(setError(error.message));
         })
         .finally(() => {
-          dispatch(setIsLoading(false));
-          handleCloseDeleteModal();
+          dispatch(setIsEditLoading(false));
+          handleCloseEditDrawer();
           fetchTableData(token);
         });
     },
     [
       dispatch,
       fetchTableData,
-      handleCloseDeleteModal,
-      isLoading,
+      handleCloseEditDrawer,
+      isEditLoading,
       setError,
-      setIsLoading,
+      setIsEditLoading,
     ]
   );
 
   const editTableData = React.useCallback(
     async (token: string, data: TableDataRowResponse) => {
-      dispatch(setIsLoading(true));
+      if (isEditLoading) {
+        return;
+      }
+
+      dispatch(setIsEditLoading(true));
 
       await axios
         .post(API_ROUTES.table.update(data.id), data, {
@@ -174,16 +190,26 @@ export const useTableStore = () => {
           dispatch(setError(error.message));
         })
         .finally(() => {
+          dispatch(setIsEditLoading(false));
           handleCloseEditDrawer();
           fetchTableData(token);
         });
     },
-    [dispatch, fetchTableData, handleCloseEditDrawer, setError, setIsLoading]
+    [
+      dispatch,
+      fetchTableData,
+      handleCloseEditDrawer,
+      isEditLoading,
+      setError,
+      setIsEditLoading,
+    ]
   );
 
   return {
     tableData,
     isLoading,
+    isEditLoading,
+    isDeleteLoading,
     error,
     isError,
     selectedRow,

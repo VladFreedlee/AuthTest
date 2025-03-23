@@ -7,6 +7,7 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import dayjs, { Dayjs } from "dayjs";
 import { TableDataRowResponse } from "../../../types/Responses";
 import { useTableStore } from "../../../hooks/useTableStore";
+import { initialFormData, FormData } from "./configs";
 
 import styles from "./EditDrawer.module.scss";
 
@@ -17,86 +18,104 @@ const EditDrawer: React.FC = () => {
     handleCloseEditDrawer,
     editTableData,
     createTableData,
+    isEditLoading,
   } = useTableStore();
   const { user } = useAuthStore();
 
-  const [companySigDate, setCompanySigDate] = React.useState<string | null>(
-    null
-  );
-  const [companySignatureName, setCompanySignatureName] =
-    React.useState<string>("");
-  const [documentName, setDocumentName] = React.useState<string>("");
-  const [documentStatus, setDocumentStatus] = React.useState<string>("");
-  const [documentType, setDocumentType] = React.useState<string>("");
-  const [employeeSigDate, setEmployeeSigDate] = React.useState<string | null>(
-    null
-  );
-  const [employeeSignatureName, setEmployeeSignatureName] =
-    React.useState<string>("");
-  const [employeeNumber, setEmployeeNumber] = React.useState<string>("");
-
-  React.useEffect(() => {
-    if (selectedRow) {
-      setCompanySigDate(selectedRow.companySigDate);
-      setCompanySignatureName(selectedRow.companySignatureName);
-      setDocumentName(selectedRow.documentName);
-      setDocumentStatus(selectedRow.documentStatus);
-      setDocumentType(selectedRow.documentType);
-      setEmployeeSigDate(selectedRow.employeeSigDate);
-      setEmployeeSignatureName(selectedRow.employeeSignatureName);
-      setEmployeeNumber(selectedRow.employeeNumber);
-    } else {
-      setCompanySigDate(null);
-      setCompanySignatureName("");
-      setDocumentName("");
-      setDocumentStatus("");
-      setDocumentType("");
-      setEmployeeSigDate(null);
-      setEmployeeSignatureName("");
-      setEmployeeNumber("");
-    }
-  }, [selectedRow]);
-
-  const handleCompanySigDate = React.useCallback((e: Dayjs | null) => {
-    setCompanySigDate(e?.format("YYYY-MM-DDTHH:mm:ss.SSSZ") ?? "");
-  }, []);
-
-  const handleEmploySigDate = React.useCallback((e: Dayjs | null) => {
-    setEmployeeSigDate(e?.format("YYYY-MM-DDTHH:mm:ss.SSSZ") ?? "");
-  }, []);
-
-  const formattedData = React.useMemo<TableDataRowResponse>(() => {
-    return {
-      id: selectedRow?.id ?? "",
-      companySigDate: companySigDate ?? "",
-      companySignatureName,
-      documentName,
-      documentStatus,
-      documentType,
-      employeeNumber,
-      employeeSigDate: employeeSigDate ?? "",
-      employeeSignatureName,
-    };
-  }, [
-    companySigDate,
-    companySignatureName,
-    documentName,
-    documentStatus,
-    documentType,
-    employeeNumber,
-    employeeSigDate,
-    employeeSignatureName,
-    selectedRow?.id,
-  ]);
+  const [formData, setFormData] = React.useState<FormData>(initialFormData);
+  const [errors, setErrors] = React.useState<
+    Partial<Record<keyof FormData, string>>
+  >({});
 
   const isEdit = React.useMemo(() => !!selectedRow, [selectedRow]);
 
-  if (!user) {
-    return null;
-  }
+  React.useEffect(() => {
+    if (selectedRow) {
+      setFormData({
+        companySigDate: selectedRow.companySigDate,
+        companySignatureName: selectedRow.companySignatureName,
+        documentName: selectedRow.documentName,
+        documentStatus: selectedRow.documentStatus,
+        documentType: selectedRow.documentType,
+        employeeSigDate: selectedRow.employeeSigDate,
+        employeeSignatureName: selectedRow.employeeSignatureName,
+        employeeNumber: selectedRow.employeeNumber,
+      });
+    } else {
+      setFormData(initialFormData);
+    }
+    setErrors({});
+  }, [selectedRow]);
 
-  const drawerTitle = isEdit ? "Edit" : "Create";
-  const drawerHandler = isEdit ? editTableData : createTableData;
+  const validateForm = React.useCallback((): boolean => {
+    const newErrors: Partial<Record<keyof FormData, string>> = {};
+
+    if (!formData.companySigDate) newErrors.companySigDate = "Required";
+    if (!formData.companySignatureName)
+      newErrors.companySignatureName = "Required";
+    if (!formData.documentName) newErrors.documentName = "Required";
+    if (!formData.documentStatus) newErrors.documentStatus = "Required";
+    if (!formData.documentType) newErrors.documentType = "Required";
+    if (!formData.employeeSigDate) newErrors.employeeSigDate = "Required";
+    if (!formData.employeeSignatureName)
+      newErrors.employeeSignatureName = "Required";
+    if (!formData.employeeNumber) newErrors.employeeNumber = "Required";
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  }, [formData]);
+
+  const handleInputChange = React.useCallback(
+    (field: keyof FormData) => (event: React.ChangeEvent<HTMLInputElement>) => {
+      setFormData((prev) => ({ ...prev, [field]: event.target.value }));
+      setErrors((prev) => ({ ...prev, [field]: undefined }));
+    },
+    []
+  );
+
+  const handleDateChange = React.useCallback(
+    (field: "companySigDate" | "employeeSigDate") => (date: Dayjs | null) => {
+      setFormData((prev) => ({
+        ...prev,
+        [field]: date?.format("YYYY-MM-DDTHH:mm:ss.SSSZ") ?? null,
+      }));
+      setErrors((prev) => ({ ...prev, [field]: undefined }));
+    },
+    []
+  );
+
+  const formattedData = React.useMemo<TableDataRowResponse>(
+    () => ({
+      id: selectedRow?.id ?? "",
+      companySigDate: formData.companySigDate ?? "",
+      companySignatureName: formData.companySignatureName,
+      documentName: formData.documentName,
+      documentStatus: formData.documentStatus,
+      documentType: formData.documentType,
+      employeeNumber: formData.employeeNumber,
+      employeeSigDate: formData.employeeSigDate ?? "",
+      employeeSignatureName: formData.employeeSignatureName,
+    }),
+    [formData, selectedRow?.id]
+  );
+
+  const handleSubmit = React.useCallback(() => {
+    if (!validateForm() || !user) {
+      return;
+    }
+
+    const drawerHandler = isEdit ? editTableData : createTableData;
+    drawerHandler(user, formattedData);
+  }, [
+    validateForm,
+    user,
+    isEdit,
+    editTableData,
+    createTableData,
+    formattedData,
+  ]);
+
+  if (!user) return null;
 
   return (
     <Drawer
@@ -105,13 +124,19 @@ const EditDrawer: React.FC = () => {
       onClose={handleCloseEditDrawer}
     >
       <Box className={styles.drawer}>
-        <Typography variant="h6">{drawerTitle}</Typography>
+        <Typography variant="h6">{isEdit ? "Edit" : "Create"}</Typography>
         <LocalizationProvider dateAdapter={AdapterDayjs}>
           <DatePicker
             label="Company Signature Date"
-            onChange={handleCompanySigDate}
+            onChange={handleDateChange("companySigDate")}
             format="DD.MM.YYYY"
-            slotProps={{ textField: { fullWidth: true } }}
+            slotProps={{
+              textField: {
+                fullWidth: true,
+                error: !!errors.companySigDate,
+                helperText: errors.companySigDate,
+              },
+            }}
             defaultValue={
               selectedRow?.companySigDate
                 ? dayjs(selectedRow.companySigDate)
@@ -120,61 +145,90 @@ const EditDrawer: React.FC = () => {
           />
           <DatePicker
             label="Employee Signature Date"
-            onChange={handleEmploySigDate}
+            onChange={handleDateChange("employeeSigDate")}
             format="DD.MM.YYYY"
             defaultValue={
               selectedRow?.employeeSigDate
                 ? dayjs(selectedRow.employeeSigDate)
                 : undefined
             }
-            slotProps={{ textField: { fullWidth: true } }}
+            slotProps={{
+              textField: {
+                fullWidth: true,
+                error: !!errors.employeeSigDate,
+                helperText: errors.employeeSigDate,
+              },
+            }}
           />
         </LocalizationProvider>
         <TextField
           label="Company Signature Name"
-          value={companySignatureName}
-          onChange={(e) => setCompanySignatureName(e.target.value)}
+          value={formData.companySignatureName}
+          onChange={handleInputChange("companySignatureName")}
+          error={!!errors.companySignatureName}
+          helperText={errors.companySignatureName}
           required
+          fullWidth
         />
         <TextField
           label="Document Name"
-          value={documentName}
-          onChange={(e) => setDocumentName(e.target.value)}
+          value={formData.documentName}
+          onChange={handleInputChange("documentName")}
+          error={!!errors.documentName}
+          helperText={errors.documentName}
           required
+          fullWidth
         />
         <TextField
           label="Document Status"
-          value={documentStatus}
-          onChange={(e) => setDocumentStatus(e.target.value)}
+          value={formData.documentStatus}
+          onChange={handleInputChange("documentStatus")}
+          error={!!errors.documentStatus}
+          helperText={errors.documentStatus}
           required
+          fullWidth
         />
         <TextField
           label="Document Type"
-          value={documentType}
-          onChange={(e) => setDocumentType(e.target.value)}
+          value={formData.documentType}
+          onChange={handleInputChange("documentType")}
+          error={!!errors.documentType}
+          helperText={errors.documentType}
           required
+          fullWidth
         />
         <TextField
           label="Employee Number"
-          value={employeeNumber}
-          onChange={(e) => setEmployeeNumber(e.target.value)}
+          value={formData.employeeNumber}
+          onChange={handleInputChange("employeeNumber")}
+          error={!!errors.employeeNumber}
+          helperText={errors.employeeNumber}
           required
+          fullWidth
         />
         <TextField
           label="Employee Signature Name"
-          value={employeeSignatureName}
-          onChange={(e) => setEmployeeSignatureName(e.target.value)}
+          value={formData.employeeSignatureName}
+          onChange={handleInputChange("employeeSignatureName")}
+          error={!!errors.employeeSignatureName}
+          helperText={errors.employeeSignatureName}
           required
+          fullWidth
         />
         <Box className={styles.drawer__footer}>
           <Button
             variant="contained"
             color="primary"
-            onClick={() => drawerHandler(user, formattedData)}
+            onClick={handleSubmit}
+            disabled={isEditLoading}
           >
-            {selectedRow ? "Edit" : "Create"}
+            {isEditLoading ? "Loading..." : isEdit ? "Edit" : "Create"}
           </Button>
-          <Button variant="outlined" onClick={handleCloseEditDrawer}>
+          <Button
+            variant="outlined"
+            onClick={handleCloseEditDrawer}
+            disabled={isEditLoading}
+          >
             Close
           </Button>
         </Box>

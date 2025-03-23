@@ -4,6 +4,8 @@ import { TableDataRowResponse } from "../../types/Responses";
 export interface TableDataState {
   tableData: TableDataRowResponse[];
   isLoading: boolean;
+  isEditLoading: boolean;
+  isDeleteLoading: boolean;
   error: string | null;
   isOpenDeleteModal: boolean;
   isOpenEditDrawer: boolean;
@@ -13,6 +15,8 @@ export interface TableDataState {
 const initialState: TableDataState = {
   tableData: [],
   isLoading: false,
+  isEditLoading: false,
+  isDeleteLoading: false,
   error: null,
   isOpenDeleteModal: false,
   isOpenEditDrawer: false,
@@ -40,6 +44,12 @@ export const tableDataSlice = createSlice({
     },
     setSelectedRow: (state, action) => {
       state.selectedRow = action.payload;
+    },
+    setIsEditLoading: (state, action) => {
+      state.isEditLoading = action.payload;
+    },
+    setIsDeleteLoading: (state, action) => {
+      state.isDeleteLoading = action.payload;
     },
   },
 });
