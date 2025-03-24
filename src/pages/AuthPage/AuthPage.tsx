@@ -1,6 +1,10 @@
 import { Button, TextField, Box, Typography } from "@mui/material";
 import * as React from "react";
 import { useAuthStore } from "../../hooks/useAuthStore";
+import { ownLocalStorage } from "../../models/LocaleStorageModel";
+import { Navigate } from "react-router-dom";
+import { routerUrls } from "../../configs/routes";
+import { StorageKeys } from "../../configs/storagekeys";
 
 import styles from "./AuthPage.module.scss";
 
@@ -86,6 +90,12 @@ const AuthPage: React.FC = () => {
   const isFormValid = React.useMemo(() => {
     return formData.username.trim() !== "" && formData.password.length !== 0;
   }, [formData]);
+
+  const token = ownLocalStorage.getItem(StorageKeys.token);
+
+  if (token) {
+    return <Navigate to={routerUrls.table.create()} />;
+  }
 
   return (
     <Box component="form" onSubmit={handleSubmit} className={styles.auth}>
