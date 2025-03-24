@@ -20,7 +20,7 @@ const initialFormData: FormData = {
 };
 
 const AuthPage: React.FC = () => {
-  const { login, error: apiError, isLoading } = useAuthStore();
+  const { login, error: apiError, isLoading, clearError } = useAuthStore();
   const [formData, setFormData] = React.useState<FormData>(initialFormData);
   const [errors, setErrors] = React.useState<FormErrors>({});
   const [touched, setTouched] = React.useState<Record<keyof FormData, boolean>>(
@@ -56,13 +56,14 @@ const AuthPage: React.FC = () => {
     (field: keyof FormData) => (e: React.ChangeEvent<HTMLInputElement>) => {
       const value = e.target.value;
       setFormData((prev) => ({ ...prev, [field]: value }));
+      clearError();
 
       if (touched[field]) {
         const error = validateField(field, value);
         setErrors((prev) => ({ ...prev, [field]: error }));
       }
     },
-    [touched, validateField]
+    [clearError, touched, validateField]
   );
 
   const handleBlur = React.useCallback(

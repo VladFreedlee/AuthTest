@@ -18,6 +18,10 @@ export const useAuthStore = () => {
 
   const isError = React.useMemo(() => !!error, [error]);
 
+  const clearError = React.useCallback(() => {
+    dispatch(setError(null));
+  }, [dispatch, setError]);
+
   const setToken = React.useCallback(
     (token: string | null) => {
       if (token) {
@@ -63,6 +67,8 @@ export const useAuthStore = () => {
           } else {
             setToken(data.data.token);
 
+            clearError();
+
             navigate(routerUrls.table.create());
           }
         })
@@ -73,7 +79,15 @@ export const useAuthStore = () => {
           dispatch(setIsLoading(false));
         });
     },
-    [isLoading, dispatch, setIsLoading, setError, setToken, navigate]
+    [
+      isLoading,
+      dispatch,
+      setIsLoading,
+      setError,
+      setToken,
+      clearError,
+      navigate,
+    ]
   );
 
   const logout = React.useCallback(() => {
@@ -91,5 +105,6 @@ export const useAuthStore = () => {
     logout,
     setToken,
     setIsLoadingState,
+    clearError,
   };
 };

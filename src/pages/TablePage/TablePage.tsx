@@ -52,6 +52,7 @@ const TablePage: React.FC = () => {
                 color="primary"
                 endIcon={<EditIcon />}
                 onClick={() => handleOpenEditDrawer(params.row)}
+                disabled={isLoading}
               >
                 Edit
               </Button>
@@ -60,6 +61,7 @@ const TablePage: React.FC = () => {
                 color="error"
                 endIcon={<DeleteIcon />}
                 onClick={() => handleOpenDeleteModal(params.row)}
+                disabled={isLoading}
               >
                 Delete
               </Button>
